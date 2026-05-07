@@ -43,12 +43,6 @@ const vmManagerHOC = function (WrappedComponent) {
             this.notifyLMSReady();
         }
 
-        componentWillUnmount () {
-            if (this.lmsListener) {
-                window.removeEventListener('message', this.lmsListener);
-            }
-        }
-
         componentDidUpdate (prevProps) {
             if (this.props.isLoadingWithId && this.props.fontsLoaded &&
                 (!prevProps.isLoadingWithId || !prevProps.fontsLoaded)) {
@@ -56,6 +50,12 @@ const vmManagerHOC = function (WrappedComponent) {
             }
             if (!this.props.isPlayerOnly && !this.props.isStarted) {
                 this.props.vm.start();
+            }
+        }
+
+        componentWillUnmount () {
+            if (this.lmsListener) {
+                window.removeEventListener('message', this.lmsListener);
             }
         }
 
