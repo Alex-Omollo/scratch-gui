@@ -14,19 +14,19 @@ import {
     projectError
 } from '../reducers/project-state';
 
-/*
- * Higher Order Component to manage events emitted by the VM
- * @param {React.Component} WrappedComponent component to manage VM events for
- * @returns {React.Component} connected component with vm events bound to redux
- */
 const vmManagerHOC = function (WrappedComponent) {
     class VMManager extends React.Component {
         constructor (props) {
             super(props);
             bindAll(this, [
-                'loadProject'
+                'loadProject',
+                'handleLMSMessage',
+                'sendProjectToLMS',
+                'notifyLMSReady'
             ]);
+            this.lmsListener = null;
         }
+
         componentDidMount () {
             if (!this.props.vm.initialized) {
                 this.audioEngine = new AudioEngine();
@@ -38,42 +38,85 @@ const vmManagerHOC = function (WrappedComponent) {
             if (!this.props.isPlayerOnly && !this.props.isStarted) {
                 this.props.vm.start();
             }
+            this.lmsListener = this.handleLMSMessage;
+            window.addEventListener('message', this.lmsListener);
+            this.notifyLMSReady();
         }
+
+        componentWillUnmount () {
+            if (this.lmsListener) {
+                window.removeEventListener('message', this.lmsListener);
+            }
+        }
+
         componentDidUpdate (prevProps) {
-            // if project is in loading state, AND fonts are loaded,
-            // and they weren't both that way until now... load project!
             if (this.props.isLoadingWithId && this.props.fontsLoaded &&
                 (!prevProps.isLoadingWithId || !prevProps.fontsLoaded)) {
                 this.loadProject();
             }
-            // Start the VM if entering editor mode with an unstarted vm
             if (!this.props.isPlayerOnly && !this.props.isStarted) {
                 this.props.vm.start();
             }
         }
+
+        notifyLMSReady () {
+            if (window.self === window.top) return;
+            const origin = process.env.REACT_APP_LMS_ORIGIN || '*';
+            window.parent.postMessage({type: 'EDITOR_READY'}, origin);
+        }
+
+        handleLMSMessage (event) {
+            const origin = process.env.REACT_APP_LMS_ORIGIN || '*';
+            if (origin !== '*' && event.origin !== origin) return;
+
+            const {type, project} = event.data || {};
+            if (!type) return;
+
+            if (type === 'SET_PROJECT' && project) {
+                fetch(project)
+                    .then(res => res.arrayBuffer())
+                    .then(buffer => this.props.vm.loadProject(buffer))
+                    .catch(err => console.error('[LMS] SET_PROJECT failed:', err));
+            }
+
+            if (type === 'GET_PROJECT') {
+                this.sendProjectToLMS();
+            }
+        }
+
+        async sendProjectToLMS () {
+            if (window.self === window.top) return;
+            const origin = process.env.REACT_APP_LMS_ORIGIN || '*';
+            try {
+                const vm = this.props.vm;
+                if (!vm) return;
+                const projectData = await vm.saveProjectSb3();
+                const blob = new Blob([projectData]);
+                const reader = new FileReader();
+                reader.onload = () => {
+                    window.parent.postMessage(
+                        {type: 'PROJECT_DATA', project: reader.result},
+                        origin
+                    );
+                };
+                reader.readAsDataURL(blob);
+            } catch (err) {
+                console.error('[LMS] sendProjectToLMS failed:', err);
+            }
+        }
+
         loadProject () {
             return this.props.vm.loadProject(this.props.projectData)
                 .then(() => {
                     this.props.onLoadedProject(this.props.loadingState, this.props.canSave);
-                    // Wrap in a setTimeout because skin loading in
-                    // the renderer can be async.
                     setTimeout(() => this.props.onSetProjectUnchanged());
-
-                    // If the vm is not running, call draw on the renderer manually
-                    // This draws the state of the loaded project with no blocks running
-                    // which closely matches the 2.0 behavior, except for monitors–
-                    // 2.0 runs monitors and shows updates (e.g. timer monitor)
-                    // before the VM starts running other hat blocks.
                     if (!this.props.isStarted) {
-                        // Wrap in a setTimeout because skin loading in
-                        // the renderer can be async.
                         setTimeout(() => this.props.vm.renderer.draw());
                     }
                 })
-                .catch(e => {
-                    this.props.onError(e);
-                });
+                .catch(e => this.props.onError(e));
         }
+
         render () {
             const {
                 /* eslint-disable no-unused-vars */
@@ -142,7 +185,6 @@ const vmManagerHOC = function (WrappedComponent) {
         onSetProjectUnchanged: () => dispatch(setProjectUnchanged())
     });
 
-    // Allow incoming props to override redux-provided props. Used to mock in tests.
     const mergeProps = (stateProps, dispatchProps, ownProps) => Object.assign(
         {}, stateProps, dispatchProps, ownProps
     );
