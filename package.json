@@ -33,7 +33,6 @@
   },
   "dependencies": {
     "@microbit/microbit-universal-hex": "^0.2.2",
-    "@vercel/analytics": "0.1.11",
     "arraybuffer-loader": "^1.0.6",
     "autoprefixer": "^9.0.1",
     "balance-text": "^3.3.1",

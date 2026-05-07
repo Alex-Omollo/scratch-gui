@@ -1,6 +1,3 @@
-import { inject } from "@vercel/analytics";
-inject();
-
 import GUI from './containers/gui.jsx';
 import AppStateHOC from './lib/app-state-hoc.jsx';
 import GuiReducer, {guiInitialState, guiMiddleware, initEmbedded, initFullScreen, initPlayer} from './reducers/gui';
