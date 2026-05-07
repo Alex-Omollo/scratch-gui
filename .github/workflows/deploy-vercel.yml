@@ -2,7 +2,7 @@ name: Deploy Scratch GUI to Vercel
 
 on:
   push:
-    branches: [deploy]
+    branches: [develop]
   workflow_dispatch:
 
 jobs:
@@ -14,34 +14,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install dependencies
-        run: npm install
-        env:
-          HUSKY: 0
-
-      - name: Build
-        run: npm run build
-        env:
-          NODE_ENV: production
-          REACT_APP_LMS_ORIGIN: ${{ secrets.LMS_ORIGIN }}
-
-      - name: Copy vercel config into build
-        run: cp vercel.json ./build/vercel.json
-
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Deploy to Vercel
-        run: |
-          vercel deploy ./build \
-            --prod \
-            --token=${{ secrets.VERCEL_TOKEN }} \
-            --yes
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build via Vercel
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          HUSKY: 0
+
+      - name: Deploy prebuilt to Vercel
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

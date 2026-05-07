@@ -1,11 +1,9 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "**",
-      "use": "@vercel/static"
-    }
-  ],
+  "outputDirectory": "build",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "framework": null,
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
@@ -13,7 +11,10 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Frame-Options", "value": "ALLOWALL" },
+        {
+          "key": "X-Frame-Options",
+          "value": "ALLOWALL"
+        },
         {
           "key": "Content-Security-Policy",
           "value": "frame-ancestors 'self' https://academy.giftechinnovators.co.ke"
