@@ -30,11 +30,18 @@ jobs:
           NODE_ENV: production
           REACT_APP_LMS_ORIGIN: ${{ secrets.LMS_ORIGIN }}
 
+      - name: Copy vercel config into build
+        run: cp vercel.json ./build/vercel.json
+
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
       - name: Deploy to Vercel
-        run: vercel deploy ./build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          vercel deploy ./build \
+            --prod \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
