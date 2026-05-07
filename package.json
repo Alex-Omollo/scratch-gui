@@ -24,7 +24,8 @@
     "test:lint": "eslint . --ext .js,.jsx",
     "test:unit": "jest test[\\\\/]unit",
     "test:smoke": "jest --runInBand test[\\\\/]smoke",
-    "watch": "webpack --watch"
+    "watch": "webpack --watch",
+    "ci:build": "npm run build"
   },
   "config": {
     "commitizen": {
