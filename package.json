@@ -25,7 +25,8 @@
         "test:unit": "jest test[\\\\/]unit",
         "test:smoke": "jest --runInBand test[\\\\/]smoke",
         "watch": "webpack --watch",
-        "ci:build": "npm run build"
+        "ci:build": "npm run build",
+        "build:app": "webpack --config webpack.config.js"
     },
     "config": {
         "commitizen": {
