@@ -61,13 +61,13 @@ const vmManagerHOC = function (WrappedComponent) {
 
         notifyLMSReady () {
             if (window.self === window.top) return;
-            const origin = process.env.REACT_APP_LMS_ORIGIN || '*';
+            const origin ='https://academy.giftechinnovators.co.ke';
             window.parent.postMessage({type: 'EDITOR_READY'}, origin);
         }
 
         handleLMSMessage (event) {
-            const origin = process.env.REACT_APP_LMS_ORIGIN || '*';
-            if (origin !== '*' && event.origin !== origin) return;
+            const origin = 'https://academy.giftechinnovators.co.ke';
+            if (event.origin !== origin) return;
 
             const {type, project} = event.data || {};
             if (!type) return;
@@ -86,7 +86,7 @@ const vmManagerHOC = function (WrappedComponent) {
 
         async sendProjectToLMS () {
             if (window.self === window.top) return;
-            const origin = process.env.REACT_APP_LMS_ORIGIN || '*';
+            const origin = 'https://academy.giftechinnovators.co.ke';
             try {
                 const vm = this.props.vm;
                 if (!vm) return;

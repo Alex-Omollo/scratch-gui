@@ -5,7 +5,10 @@
   "installCommand": "npm install --legacy-peer-deps",
   "framework": null,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/((?!static|chunks|libraries|extension-worker).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
